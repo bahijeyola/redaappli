@@ -196,17 +196,19 @@ const EmployeeDashboard = () => {
 
                 {!isCheckedIn ? (
                     <div>
-                        {/* Camera UI */}
+                        {/* Camera UI - Inline */}
                         {showCamera && (
-                            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'black', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
-                                <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: '100%', objectFit: 'cover' }} />
-                                <div style={{ padding: '2rem', display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(0,0,0,0.5)' }}>
-                                    <button onClick={stopCamera} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1rem' }}>Cancel</button>
-                                    <div
-                                        onClick={capturePhoto}
-                                        style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'white', border: '4px solid rgba(255,255,255,0.5)', cursor: 'pointer' }}
-                                    ></div>
-                                    <button onClick={switchCamera} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1rem' }}>Flip</button>
+                            <div style={{ marginBottom: '1rem', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
+                                <div style={{ position: 'relative', height: '300px' }}>
+                                    <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div style={{ position: 'absolute', bottom: '10px', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
+                                        <button onClick={stopCamera} style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                                        <div
+                                            onClick={capturePhoto}
+                                            style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'white', border: '3px solid rgba(255,255,255,0.5)', cursor: 'pointer' }}
+                                        ></div>
+                                        <button onClick={switchCamera} style={{ background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Flip</button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -214,51 +216,45 @@ const EmployeeDashboard = () => {
 
                         {/* Photo Preview & Check In Actions */}
                         {!photo ? (
-                            !showCamera && (
-                                <button
-                                    onClick={startCamera}
-                                    disabled={!location}
-                                    style={{ width: '100%', padding: '1rem', background: location ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: location ? 'pointer' : 'not-allowed' }}
-                                >
-                                    {location ? 'OPEN CAMERA & CHECK IN' : user ? 'Locating...' : 'Loading...'}
+                            { location? 'OPEN CAMERA & CHECK IN': user ? 'Locating...' : 'Loading...' }
                                 </button>
-                            )
+                )
                         ) : (
-                            <div style={{ textAlign: 'center' }}>
-                                <img src={photo} alt="Check-in Self" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '1rem', border: '2px solid #ddd' }} />
-                                <div style={{ display: 'grid', gap: '1rem' }}>
-                                    <button onClick={handleCheckIn} style={{ width: '100%', padding: '1rem', background: '#28a745', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}>
-                                        CONFIRM CHECK IN
-                                    </button>
-                                    <button onClick={() => setPhoto(null)} style={{ width: '100%', padding: '0.75rem', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '8px', cursor: 'pointer' }}>
-                                        Retake Photo
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
+                <div style={{ textAlign: 'center' }}>
+                    <img src={photo} alt="Check-in Self" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '1rem', border: '2px solid #ddd' }} />
                     <div style={{ display: 'grid', gap: '1rem' }}>
-                        <button
-                            onClick={() => handleCheckOut(false)}
-                            style={{ width: '100%', padding: '1rem', background: '#6c757d', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}
-                        >
-                            CHECK OUT
+                        <button onClick={handleCheckIn} style={{ width: '100%', padding: '1rem', background: '#28a745', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}>
+                            CONFIRM CHECK IN
                         </button>
-                        <button
-                            onClick={() => handleCheckOut(true)}
-                            style={{ width: '100%', padding: '1rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}
-                        >
-                            EMERGENCY CHECK OUT
+                        <button onClick={() => setPhoto(null)} style={{ width: '100%', padding: '0.75rem', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '8px', cursor: 'pointer' }}>
+                            Retake Photo
                         </button>
-                        <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
-                            Your location is being tracked live while checked in.
-                        </p>
                     </div>
+                </div>
+                        )}
+            </div>
+            ) : (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+                <button
+                    onClick={() => handleCheckOut(false)}
+                    style={{ width: '100%', padding: '1rem', background: '#6c757d', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}
+                >
+                    CHECK OUT
+                </button>
+                <button
+                    onClick={() => handleCheckOut(true)}
+                    style={{ width: '100%', padding: '1rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}
+                >
+                    EMERGENCY CHECK OUT
+                </button>
+                <p style={{ textAlign: 'center', fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
+                    Your location is being tracked live while checked in.
+                </p>
+            </div>
                 )}
 
-            </div>
         </div>
+        </div >
     );
 };
 
