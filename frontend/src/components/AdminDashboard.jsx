@@ -109,14 +109,8 @@ const AdminDashboard = () => {
 
     const loadUsers = async () => {
         try {
-            const res = await api.get('/users?role=employee'); // Assuming we can filter or just get all
-            // If API doesn't support filter, filter here.
-            // Actually /users is currently Create only? No, I need a GET /users endpoint in Backend or I can use Supabase client directly check
-            // Let's assume I check the 'users' table via the API I'll add or just use the generic response
-            // Wait, I didn't add GET /api/users. I did add GET /api/attendance/live which returns users.
-            // I'll use /api/attendance/live to get users list for the dropdown for now or add GET /users.
-            const statusRes = await api.get('/attendance/live');
-            setUsers(statusRes.data);
+            const res = await api.get('/users');
+            setUsers(res.data);
         } catch (err) { console.error(err); }
     };
 

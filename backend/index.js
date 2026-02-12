@@ -43,6 +43,19 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Admin: Is User or List Users
+app.get('/api/users', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, username, email, role');
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Admin: Create User
 app.post('/api/users', async (req, res) => {
     const { username, email, password, role } = req.body;

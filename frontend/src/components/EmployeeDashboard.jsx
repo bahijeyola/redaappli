@@ -78,15 +78,18 @@ const EmployeeDashboard = () => {
         }
     };
 
-    const stopCamera = () => {
+    const stopCamera = (keepUI = false) => {
         if (videoRef.current && videoRef.current.srcObject) {
             videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         }
-        setShowCamera(false);
+        if (!keepUI) {
+            setShowCamera(false);
+        }
     };
 
     const switchCamera = () => {
-        stopCamera();
+        // Stop signals but keep UI open so we don't flicker
+        stopCamera(true);
         setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
     };
 
