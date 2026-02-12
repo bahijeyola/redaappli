@@ -57,25 +57,89 @@ const EmployeeDashboard = () => {
         }
     };
 
+    const [showCamera, setShowCamera] = useState(false);
+    const [photo, setPhoto] = useState(null);
+    const [facingMode, setFacingMode] = useState('user'); // 'user' or 'environment'
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+
+    const startCamera = async () => {
+        setShowCamera(true);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode }
+            });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+        } catch (err) {
+            alert('Camera Error: ' + err.message);
+            setShowCamera(false);
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        }
+        setShowCamera(false);
+    };
+
+    const switchCamera = () => {
+        stopCamera();
+        setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+    };
+
+    // Restart camera when facingMode changes
+    useEffect(() => {
+        if (showCamera) {
+            startCamera();
+        }
+    }, [facingMode]);
+
+    const capturePhoto = () => {
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            const context = canvas.getContext('2d');
+
+            // Set canvas dimensions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get base64 string
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // Compress to 0.7 quality
+            setPhoto(dataUrl);
+            stopCamera();
+        }
+    };
+
     const handleCheckIn = async () => {
         if (!location) {
             alert('Waiting for location...');
             return;
         }
+        if (!photo) {
+            alert('Photo is required for check-in.');
+            return;
+        }
 
-        // Optional: Get current time and day from JS to send, though backend can handle it.
         const dayOfWeek = new Date().toLocaleDateString('fr-FR', { weekday: 'long' });
-        // Capitalize first letter
         const dayFormatted = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
 
         try {
             await api.post('/attendance/checkin', {
                 userId: user.id,
                 coords: location,
-                dayOfWeek: dayFormatted // Sending this just in case backend wants it, though backend infers currently
+                dayOfWeek: dayFormatted,
+                photo: photo
             });
             setIsCheckedIn(true);
             setStatus('Checked In Successfully');
+            setPhoto(null); // Reset photo
             alert('Welcome! You are checked in.');
         } catch (err) {
             alert('Check-in Failed: ' + (err.response?.data?.error || err.message));
@@ -131,13 +195,46 @@ const EmployeeDashboard = () => {
                 </div>
 
                 {!isCheckedIn ? (
-                    <button
-                        onClick={handleCheckIn}
-                        disabled={!location}
-                        style={{ width: '100%', padding: '1rem', background: location ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: location ? 'pointer' : 'not-allowed' }}
-                    >
-                        {location ? 'CHECK IN NOW' : 'Locating...'}
-                    </button>
+                    <div>
+                        {/* Camera UI */}
+                        {showCamera && (
+                            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'black', zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+                                <video ref={videoRef} autoPlay playsInline style={{ flex: 1, width: '100%', objectFit: 'cover' }} />
+                                <div style={{ padding: '2rem', display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(0,0,0,0.5)' }}>
+                                    <button onClick={stopCamera} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1rem' }}>Cancel</button>
+                                    <div
+                                        onClick={capturePhoto}
+                                        style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'white', border: '4px solid rgba(255,255,255,0.5)', cursor: 'pointer' }}
+                                    ></div>
+                                    <button onClick={switchCamera} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1rem' }}>Flip</button>
+                                </div>
+                            </div>
+                        )}
+                        <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+                        {/* Photo Preview & Check In Actions */}
+                        {!photo ? (
+                            <button
+                                onClick={startCamera}
+                                disabled={!location}
+                                style={{ width: '100%', padding: '1rem', background: location ? '#1a73e8' : '#ccc', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: location ? 'pointer' : 'not-allowed' }}
+                            >
+                                {location ? 'TAKE PHOTO & CHECK IN' : user ? 'Locating...' : 'Loading...'}
+                            </button>
+                        ) : (
+                            <div style={{ textAlign: 'center' }}>
+                                <img src={photo} alt="Check-in Self" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '1rem', border: '2px solid #ddd' }} />
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    <button onClick={handleCheckIn} style={{ width: '100%', padding: '1rem', background: '#28a745', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1.1rem', fontWeight: '600', cursor: 'pointer' }}>
+                                        CONFIRM CHECK IN
+                                    </button>
+                                    <button onClick={() => setPhoto(null)} style={{ width: '100%', padding: '0.75rem', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '8px', cursor: 'pointer' }}>
+                                        Retake Photo
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <div style={{ display: 'grid', gap: '1rem' }}>
                         <button
